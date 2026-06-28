@@ -12,150 +12,137 @@ const wind = document.getElementById("wind");
 const weatherIcon = document.getElementById("weatherIcon");
 const errorMessage = document.getElementById("errorMessage");
 
-
 const apiKey = "5b2b06a80536b213ae14f6b22c3d7369";
 
 function getWeather() {
+  const city = cityInput.value;
 
-    const city = cityInput.value;
+  errorMessage.innerText = "";
 
-    errorMessage.innerText = "";
+  searchBtn.disabled = true;
+  searchBtn.innerText = "Loading...";
 
-   
-    searchBtn.disabled = true;
-searchBtn.innerText = "Loading...";
-
-    fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
-    )
+  fetch(
+    `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`,
+  )
     .then(function (response) {
-        return response.json();
+      return response.json();
     })
     .then(function (data) {
+      searchBtn.disabled = false;
+      searchBtn.innerText = "Search";
 
-        searchBtn.disabled = false;
-searchBtn.innerText = "Search";
+      if (data.cod != 200) {
+        errorMessage.innerText = "City not found.";
+        return;
+      }
 
-        if (data.cod != 200) {
-            errorMessage.innerText = "City not found.";
-            return;
-        }
+      cityName.innerText = data.name + ", " + data.sys.country;
+      const timezone = data.timezone;
 
-        cityName.innerText =
-        data.name + ", " + data.sys.country;
-        const timezone = data.timezone;
+      const localTime = new Date(Date.now() + timezone * 1000 - 19800 * 1000);
 
-        const localTime = new Date(
-        Date.now() + timezone * 1000 - 19800 * 1000
-        );
+      const dateOptions = {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      };
 
-        dateTime.innerText =
-        localTime.toLocaleDateString() +
-         " • " +
-        localTime.toLocaleTimeString([], {
+      const timeOptions = {
         hour: "2-digit",
-        minute: "2-digit"
-    });
-        const weatherMain = data.weather[0].main;
+        minute: "2-digit",
+      };
 
-if (weatherMain === "Clear") {
-    document.body.style.background =
-        "linear-gradient(135deg, #f59e0b, #f97316)";
-}
+      dateTime.innerText =
+        localTime.toLocaleDateString("en-GB", dateOptions) +
+        " • " +
+        localTime.toLocaleTimeString("en-US", timeOptions);
+      const weatherMain = data.weather[0].main;
 
-else if (weatherMain === "Clouds") {
-    document.body.style.background =
-        "linear-gradient(135deg, #4b5563, #1f2937)";
-}
+      if (weatherMain === "Clear") {
+        document.body.style.background =
+          "linear-gradient(135deg, #f59e0b, #f97316)";
+      } else if (weatherMain === "Clouds") {
+        document.body.style.background =
+          "linear-gradient(135deg, #4b5563, #1f2937)";
+      } else if (weatherMain === "Rain") {
+        document.body.style.background =
+          "linear-gradient(135deg, #0f766e, #164e63)";
+      } else {
+        document.body.style.background =
+          "linear-gradient(135deg, #0f172a, #1e293b)";
+      }
 
-else if (weatherMain === "Rain") {
-    document.body.style.background =
-        "linear-gradient(135deg, #0f766e, #164e63)";
-}
+      temperature.innerText = Math.round(data.main.temp) + "°C";
 
-else {
-    document.body.style.background =
-        "linear-gradient(135deg, #0f172a, #1e293b)";
-}
+      condition.innerText = data.weather[0].main;
 
-        temperature.innerText =
-            Math.round(data.main.temp) + "°C";
+      humidity.innerText = "Humidity: " + data.main.humidity + "%";
 
-        condition.innerText =
-            data.weather[0].main;
+      wind.innerText = "Wind: " + data.wind.speed + " km/h";
 
-        humidity.innerText =
-            "Humidity: " + data.main.humidity + "%";
+      const iconCode = data.weather[0].icon;
 
-        wind.innerText =
-            "Wind: " + data.wind.speed + " km/h";
+      weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
 
-        const iconCode = data.weather[0].icon;
-
-        weatherIcon.src =
-            `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
-
-        weatherIcon.style.display = "block";
+      weatherIcon.style.display = "block";
     });
 }
 
 searchBtn.addEventListener("click", getWeather);
 
 cityInput.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-        getWeather();
-    }
+  if (event.key === "Enter") {
+    getWeather();
+  }
 });
 locationBtn.addEventListener("click", function () {
+  navigator.geolocation.getCurrentPosition(function (position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
 
-    navigator.geolocation.getCurrentPosition(function (position) {
+    fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`,
+    )
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        const timezone = data.timezone;
 
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+        const localTime = new Date(Date.now() + timezone * 1000 - 19800 * 1000);
 
-        fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
-        )
-        .then(function (response) {
-            return response.json();
-        })
-        .then(function (data) {
-            const timezone = data.timezone;
+        const dateOptions = {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        };
 
-            const localTime = new Date(
-            Date.now() + timezone * 1000 - 19800 * 1000
-            );
+        const timeOptions = {
+          hour: "2-digit",
+          minute: "2-digit",
+        };
 
-            dateTime.innerText =
-            localTime.toLocaleDateString() +
-            " • " +
-            localTime.toLocaleTimeString([], {
-             hour: "2-digit",
-            minute: "2-digit"
-            });
+        dateTime.innerText =
+          localTime.toLocaleDateString("en-GB", dateOptions) +
+          " • " +
+          localTime.toLocaleTimeString("en-US", timeOptions);
 
-            cityName.innerText = data.name;
+        cityName.innerText = data.name;
 
-            temperature.innerText =
-                Math.round(data.main.temp) + "°C";
+        temperature.innerText = Math.round(data.main.temp) + "°C";
 
-            condition.innerText =
-                data.weather[0].main;
+        condition.innerText = data.weather[0].main;
 
-            humidity.innerText =
-                "Humidity: " + data.main.humidity + "%";
+        humidity.innerText = "Humidity: " + data.main.humidity + "%";
 
-            wind.innerText =
-                "Wind: " + data.wind.speed + " km/h";
+        wind.innerText = "Wind: " + data.wind.speed + " km/h";
 
-            const iconCode = data.weather[0].icon;
+        const iconCode = data.weather[0].icon;
 
-            weatherIcon.src =
-                `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
+        weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
 
-            weatherIcon.style.display = "block";
-        });
-
-    });
-
+        weatherIcon.style.display = "block";
+      });
+  });
 });
